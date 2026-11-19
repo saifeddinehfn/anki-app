@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 
 const KEY = "saif-flash-cards-v1";
 const LEVELS = [
-  { label: "Very Hard", days: 0.04, color: "#dc2626" },
+  { label: "Very Hard", days: 0, color: "#dc2626" },
   { label: "Hard", days: 1, color: "#ea580c" },
   { label: "Normal", days: 3, color: "#ca8a04" },
   { label: "Easy", days: 7, color: "#16a34a" },
@@ -39,11 +39,11 @@ export default function Home() {
   function rate(index) {
     if (!active) return;
     const level = LEVELS[index];
-    // Very Hard: ~1 hour; Hard: 1 day; Normal: 3 days; Easy: 7 days; Very Easy: 21 days.
+    // Very Hard stays due in the current session; the other levels schedule future reviews.
     // Repeated successes grow the interval, while hard ratings reset it.
     const previous = active.interval || 0;
     const days = index < 2 ? level.days : Math.max(level.days, previous * [0, 0, 1.5, 2, 2.5][index]);
-    const next = Date.now() + days * DAY;
+    const next = index === 0 ? Date.now() : Date.now() + days * DAY;
     setCards(old => old.map(c => c.id === active.id ? { ...c, dueAt: next, interval: days, reviews: (c.reviews || 0) + 1, lastLevel: level.label } : c));
     setRevealed(false); setSessionDone(x => x + 1); setNow(Date.now());
   }
@@ -92,7 +92,7 @@ export default function Home() {
               <><p style={{ color: "#64748b", fontSize: 14, marginTop: 22 }}>How well did you remember it?</p>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center" }}>{LEVELS.map((level,i) =>
                   <button key={level.label} onClick={() => rate(i)} style={{ ...btn, background: level.color, color: "white", fontSize: 13 }}>{level.label}</button>)}</div>
-                <p style={{ color: "#94a3b8", fontSize: 12 }}>Very Hard ≈ 1 hour · Hard 1 day · Normal 3 days · Easy 7 days · Very Easy 21 days (longer with progress)</p>
+                <p style={{ color: "#94a3b8", fontSize: 12 }}>Very Hard repeats now · Hard 1 day · Normal 3 days · Easy 7 days · Very Easy 21 days (longer with progress)</p>
               </>}
           </div>}
         </section>}
